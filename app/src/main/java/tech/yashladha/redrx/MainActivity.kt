@@ -102,6 +102,8 @@ class MainActivity : AppCompatActivity() {
         } catch (e: IOException) {
             e.printStackTrace()
         }
+        val fileObj = File(filePath)
+        fileObj.delete()
         return Observable.just("Done")
     }
 
