@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">RedRx</string>
     <string name="APIURL">http://www.androidbegin.com/tutorial/</string>
+    <string name="STATUS">Please connect to Internet!!</string>
 </resources>

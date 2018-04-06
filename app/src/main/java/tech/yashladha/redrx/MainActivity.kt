@@ -63,12 +63,12 @@ class MainActivity : AppCompatActivity() {
     private fun getContacts() {
         getContactsList()
                 .subscribeOn(Schedulers.io())
-                .flatMap({t: MutableList<Contacts> -> generateCSV(t) })
-                .flatMap({t: String ->  generateZip(t)})
+                .flatMap({ t: MutableList<Contacts> -> generateCSV(t) })
+                .flatMap({ t: String -> generateZip(t) })
                 .subscribe(
                         { },
-                        { err ->
-                            error("Error is received" + err.localizedMessage)
+                        {
+                            Toast.makeText(this, "Unable to create ZIP", Toast.LENGTH_SHORT).show()
                         },
                         {
                             Log.d("Completion Status: ", "Completed")
@@ -85,20 +85,20 @@ class MainActivity : AppCompatActivity() {
             val zipFilePath = File(Environment.getExternalStorageDirectory(), "test.zip")
             ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFilePath.absolutePath))).use { out ->
                 val data = ByteArray(1024)
-                    FileInputStream(filePath).use { fi ->
-                        BufferedInputStream(fi).use { origin ->
-                            val entry = ZipEntry(filePath.substring(filePath.lastIndexOf("/")+1))
-                            out.putNextEntry(entry)
-                            while (true) {
-                                val readBytes = origin.read(data)
-                                if (readBytes == -1) {
-                                    break
-                                }
-                                out.write(data, 0, readBytes)
+                FileInputStream(filePath).use { fi ->
+                    BufferedInputStream(fi).use { origin ->
+                        val entry = ZipEntry(filePath.substring(filePath.lastIndexOf("/") + 1))
+                        out.putNextEntry(entry)
+                        while (true) {
+                            val readBytes = origin.read(data)
+                            if (readBytes == -1) {
+                                break
                             }
+                            out.write(data, 0, readBytes)
                         }
                     }
                 }
+            }
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         return Observable.just("Done")
     }
 
-    private fun generateCSV(contactsList: MutableList<Contacts>) : Observable<String> {
+    private fun generateCSV(contactsList: MutableList<Contacts>): Observable<String> {
         val file = File(Environment.getExternalStorageDirectory(), "test.csv")
         try {
             if (!file.exists())
@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 null, null, null, null
         )
-        val contactsList : MutableList<Contacts> = mutableListOf()
+        val contactsList: MutableList<Contacts> = mutableListOf()
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 val name = cursor.getString(
@@ -164,14 +164,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun getPermissions() {
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(
-                        arrayOf(Manifest.permission.READ_CONTACTS,
-                                Manifest.permission.READ_EXTERNAL_STORAGE,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                        PERMISSION_REQUEST
-                        )
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(
+                    arrayOf(Manifest.permission.READ_CONTACTS,
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    PERMISSION_REQUEST
+            )
+        }
 
 
     }
@@ -180,8 +180,8 @@ class MainActivity : AppCompatActivity() {
                                             @NonNull permissions: Array<String>,
                                             @NonNull grantResults: IntArray) {
         if (requestCode == PERMISSION_REQUEST) {
-            for ( i in 0 until permissions.size) {
-                if (grantResults[i] == PackageManager.PERMISSION_GRANTED ) {
+            for (i in 0 until permissions.size) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "Permissions granted", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, "Permissions denied", Toast.LENGTH_SHORT).show()
@@ -199,11 +199,13 @@ class MainActivity : AppCompatActivity() {
                 .subscribe(
                         { countries ->
                             Log.d("Size", countries.countries.size.toString())
+                            tv_check.visibility = View.GONE
                             countriesList.addAll(countries.countries)
                             rvAdapter.notifyDataSetChanged()
                         },
                         {
-                            error("Error in subscribe")
+                            tv_check.visibility = View.VISIBLE
+                            tv_check.text = getString(R.string.STATUS)
                         },
                         {
                             Log.d("Receiver", "Completed")
